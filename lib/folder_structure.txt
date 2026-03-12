@@ -1,0 +1,45 @@
+counter_app/
+├── lib/
+│   ├── core/                    # App-wide utilities
+│   │   ├── constants/           # Static values (e.g., API keys)
+│   │   │   └── app_constants.dart
+│   │   ├── di/                  # Dependency injection setup
+│   │   │   └── injector.dart
+│   │   ├── error/               # Custom exceptions
+│   │   │   └── exceptions.dart
+│   │   └── utils/               # Helpers (e.g., logger)
+│   │       └── logger.dart
+│   ├── features/                # Feature modules
+│   │   └── counter/             # Counter feature
+│   │       ├── data/            # Data layer
+│   │       │   ├── models/      # Data models
+│   │       │   │   └── counter_model.dart
+│   │       │   └── repositories/# Data sources
+│   │       │       └── counter_repositoryImp.dart
+│   │       ├── domain/          # Business logic
+│   │       │   ├── entities/    # Pure data objects
+│   │       │   │   └── counter_entity.dart
+│   │       │   ├── usecases/    # Use cases (logic)
+│   │       │   │   └── counter_usecase.dart
+│   │       │   └── repositories/# Abstract repo
+│   │       │       └── counter_repository.dart
+│   │       └── presentation/    # UI + Bloc
+│   │           ├── bloc/        # State management
+│   │           │   ├── counter_bloc.dart
+│   │           │   ├── counter_event.dart
+│   │           │   └── counter_state.dart
+│   │           └── screens/     # UI screens
+│   │               └── counter_screen.dart
+│   ├── app.dart                 # App widget (entry)
+│   └── main.dart                # Main entry point
+├── test/                        # Unit/integration tests
+│   ├── features/
+│   │   └── counter/
+│   │       ├── bloc/
+│   │       └── data/
+│   └── widget_test.dart
+└── pubspec.yaml
+
+
+
+
