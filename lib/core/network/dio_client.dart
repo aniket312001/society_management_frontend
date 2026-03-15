@@ -1,34 +1,63 @@
-import '../constants/api_constants.dart';
-
 import 'package:dio/dio.dart';
+import '../constants/api_constants.dart';
 import '../storage/token_storage.dart';
-import '../di/injector.dart';
+import '../di/injector.dart'; // your get_it / service locator
 
 class DioClient {
-  final Dio dio = Dio();
+  late final Dio dio;
 
   DioClient() {
-    dio.options.baseUrl = ApiConstants.baseUrl;
+    dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConstants.baseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {'Accept': 'application/json'},
+      ),
+    );
 
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await sl<TokenStorage>().getToken();
+          print("hitting api");
+          final token = await sl<TokenStorage>().getValidToken();
 
           if (token != null) {
-            options.headers["Authorization"] = "Bearer $token";
+            options.headers['Authorization'] = 'Bearer $token';
           }
 
           return handler.next(options);
         },
 
-        onError: (error, handler) {
-          if (error.response?.statusCode == 401) {
-            /// Token expired
-            /// Later we will logout user
+        onError: (DioException err, ErrorInterceptorHandler handler) async {
+          print("Error in api - ${err}");
+          // ── Critical part: handle 401 globally ────────────────────────
+          if (err.response?.statusCode == 401 ||
+              err.response?.statusCode == 403) {
+            // Token invalid / expired according to backend
+            await sl<TokenStorage>().clearToken();
+
+            // Option A: Just let the request fail (simplest)
+            // The calling use-case / bloc can catch and trigger logout
+
+            // Option B: Emit global logout event (recommended if using Bloc/Riverpod)
+            // sl<AuthBloc>().add(LogoutRequested());
+
+            // Option C: Show toast / dialog here (not recommended – better in UI layer)
+
+            // For now → reject with custom error so caller knows
+            return handler.reject(
+              DioException(
+                requestOptions: err.requestOptions,
+                response: err.response,
+                error: 'Session expired. Please login again.',
+                type: DioExceptionType.badResponse,
+              ),
+            );
           }
 
-          return handler.next(error);
+          // Other errors → pass through
+          return handler.next(err);
         },
       ),
     );
