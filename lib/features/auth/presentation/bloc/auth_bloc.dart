@@ -1,5 +1,9 @@
 // features/auth/presentation/bloc/auth_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:society_management_app/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:society_management_app/features/auth/domain/entities/user_login_entity.dart';
+import 'package:society_management_app/features/auth/domain/usecases/check_user_exist_usecase.dart';
+import 'package:society_management_app/features/auth/domain/usecases/get_current_user_society_usecase.dart';
 import '../../domain/usecases/check_current_user_usecase.dart';
 import '../../domain/usecases/create_new_society_with_admin_usecase.dart';
 import '../../domain/usecases/email_login_usecase.dart';
@@ -14,12 +18,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final CreateNewSocietyWithAdminUseCase createSociety;
   final EmailLoginUseCase emailLogin;
   final LogoutUseCase logout;
+  final GetCurrentUserSocietyUseCase currentUserSocietyUseCase;
+  final CheckUserExistUseCase checkUserExistUseCase;
 
   AuthBloc({
     required this.checkCurrentUser,
     required this.createSociety,
+    required this.currentUserSocietyUseCase,
     required this.emailLogin,
     required this.logout,
+    required this.checkUserExistUseCase,
   }) : super(AuthInitial()) {
     on<CheckLoginUser>(_onCheckLoginUser);
     on<CreateNewSociety>(_onCreateNewSociety);
@@ -29,8 +37,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<VerifyEmailOtp>(_onVerifyEmailOtp);
     on<SendPhoneOtp>(_onSendPhoneOtp);
     on<VerifyPhoneOtp>(_onVerifyPhoneOtp);
+    on<CheckUserIdentifier>(_checkUserIdentifier);
     // on<PhoneLogin>(_onPhoneLogin);
     // on<GoogleLogin>(_onGoogleLogin);
+  }
+
+  String _parseError(Object e) {
+    if (e is ServerException) return e.message;
+    if (e is ValidationException) return e.message;
+    if (e is ConflictException) return e.message;
+    if (e is UnauthorizedException) return e.message;
+    if (e is NetworkException) return e.message;
+    // Fallback: strip "Exception: " prefix dart adds
+    final raw = e.toString();
+    if (raw.startsWith('Exception: ')) return raw.substring(11);
+    return raw;
   }
 
   Future<void> _onCheckLoginUser(
@@ -43,9 +64,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     if (result != null) {
       // Optionally fetch society here too if needed
-      emit(Authenticated(result));
+      // emit(Authenticated(result));
+
+      // Always check society status on app start
+      await _navigateBasedOnSocietyStatus(emit, result);
     } else {
       emit(UnAuthenticated());
+    }
+  }
+
+  Future<void> _navigateBasedOnSocietyStatus(
+    Emitter<AuthState> emit,
+    UserEntity user,
+  ) async {
+    try {
+      final society = await currentUserSocietyUseCase(); // use your use case
+
+      if (society == null) return;
+
+      emit(SocietyStatusState(user: user, society: society));
+      // emit(Authenticated(user));
+    } catch (e) {
+      emit(SocietyStatusState(error: _parseError(e)));
+      // emit(SocietyStatusState(user: user, errorMessage: _parseError(e)));
     }
   }
 
@@ -55,19 +96,50 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(CreateSocietyLoading());
 
-    final result = await createSociety(
-      society: event.societyEntity,
-      user: event.userEntity,
+    try {
+      final result = await createSociety(
+        society: event.societyEntity,
+        user: event.userEntity,
+      );
+
+      if (result.isSuccess) {
+        emit(CreateSocietySuccess(result.admin!, result.society!));
+        emit(Authenticated(result.admin!, society: result.society));
+      } else {
+        emit(
+          CreateSocietyFailure(
+            result.errorMessage ?? 'Failed to create society',
+          ),
+        );
+      }
+    } catch (e) {
+      emit(
+        CreateSocietyFailure(_parseError(e)),
+      ); // ← this catch is what's missing
+    }
+  }
+
+  Future<void> _checkUserIdentifier(
+    CheckUserIdentifier event,
+    Emitter<AuthState> emit,
+  ) async {
+    UserLoginEntity? user = await checkUserExistUseCase(
+      event.identifier,
+      event.isEmail,
     );
 
-    if (result.isSuccess) {
-      emit(CreateSocietySuccess(result.admin!, result.society!));
-      emit(Authenticated(result.admin!, society: result.society));
+    if (user == null || (user != null && user.exists == false)) {
+      emit(IdentifierNotFound("User Doesn't exist"));
     } else {
-      emit(
-        CreateSocietyFailure(result.errorMessage ?? 'Failed to create society'),
-      );
+      if (user.status == "pending") {
+        emit(IdentifierPending(user));
+      } else if (user.status == "active") {
+        emit(IdentifierActive(user));
+      } else {
+        emit(IdentifierRejected(event.identifier, user));
+      }
     }
+    return;
   }
 
   Future<void> _onEmailLogin(
@@ -83,7 +155,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       emit(Authenticated(user));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError(_parseError(e)));
     }
   }
 
@@ -91,13 +163,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     SendEmailOtp event,
     Emitter<AuthState> emit,
   ) async {
-    emit(AuthLoading());
+    emit(EmailOtpSending());
 
     try {
       await createSociety.repository.sendEmailOtp(event.email);
-      emit(EmailOtpSent());
+      emit(EmailOtpSendingSuccess());
     } catch (e) {
-      emit(AuthError("Failed to send email OTP"));
+      emit(EmailOtpSendingFailure(e.toString()));
     }
   }
 
@@ -105,35 +177,34 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     VerifyEmailOtp event,
     Emitter<AuthState> emit,
   ) async {
-    emit(AuthLoading());
+    emit(EmailOtpVerifying());
 
     try {
-      final result = await createSociety.repository.verifyEmailOtp(
+      final success = await createSociety.repository.verifyEmailOtp(
         event.email,
         event.otp,
       );
-
-      if (result) {
-        emit(EmailOtpVerified());
+      if (success) {
+        emit(EmailOtpVerifyingSuccess());
       } else {
-        emit(AuthError("Invalid Email OTP"));
+        emit(EmailOtpVerifyingFailure("Invalid or expired OTP"));
       }
     } catch (e) {
-      emit(AuthError("OTP verification failed"));
+      emit(EmailOtpVerifyingFailure(_parseError(e)));
     }
   }
 
+  // Same pattern for Phone
   Future<void> _onSendPhoneOtp(
     SendPhoneOtp event,
     Emitter<AuthState> emit,
   ) async {
-    emit(AuthLoading());
-
+    emit(PhoneOtpSending());
     try {
       await createSociety.repository.sendPhoneOtp(event.phone);
-      emit(PhoneOtpSent());
+      emit(PhoneOtpSendingSuccess());
     } catch (e) {
-      emit(AuthError("Failed to send phone OTP"));
+      emit(PhoneOtpSendingFailure(_parseError(e)));
     }
   }
 
@@ -141,21 +212,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     VerifyPhoneOtp event,
     Emitter<AuthState> emit,
   ) async {
-    emit(AuthLoading());
-
+    emit(PhoneOtpVerifying());
     try {
-      final result = await createSociety.repository.verifyPhoneOtp(
+      final success = await createSociety.repository.verifyPhoneOtp(
         event.phone,
         event.otp,
       );
-
-      if (result) {
-        emit(PhoneOtpVerified());
+      if (success) {
+        emit(PhoneOtpVerifyingSuccess());
       } else {
-        emit(AuthError("Invalid Phone OTP"));
+        emit(PhoneOtpVerifyingFailure("Invalid or expired OTP"));
       }
     } catch (e) {
-      emit(AuthError("OTP verification failed"));
+      emit(PhoneOtpVerifyingFailure(_parseError(e)));
     }
   }
 

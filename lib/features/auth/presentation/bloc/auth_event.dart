@@ -1,6 +1,7 @@
 import 'package:society_management_app/features/auth/domain/entities/society_entity.dart';
 import 'package:society_management_app/features/auth/domain/entities/user_entity.dart';
 import 'package:equatable/equatable.dart';
+import 'package:society_management_app/features/auth/domain/entities/user_login_entity.dart';
 
 abstract class AuthEvent extends Equatable {
   @override
@@ -8,6 +9,37 @@ abstract class AuthEvent extends Equatable {
 }
 
 class CheckLoginUser extends AuthEvent {}
+
+class CheckUserIdentifier extends AuthEvent {
+  final bool isEmail;
+  final String identifier; // email or phone
+  CheckUserIdentifier(this.identifier, this.isEmail);
+
+  @override
+  List<Object?> get props => [identifier, isEmail];
+}
+
+class SendBothOtpEmailPhone extends AuthEvent {
+  UserLoginEntity identifier;
+  SendBothOtpEmailPhone(this.identifier);
+}
+
+class VerifyEmailPhoneOtp extends AuthEvent {
+  UserLoginEntity identifier;
+  String phoneOTP;
+  String emailOTP;
+  VerifyEmailPhoneOtp({
+    required this.identifier,
+    required this.emailOTP,
+    required this.phoneOTP,
+  });
+}
+
+class SetNewPassword extends AuthEvent {
+  UserLoginEntity identifier;
+  String newPassword;
+  SetNewPassword({required this.identifier, required this.newPassword});
+}
 
 class CreateNewSociety extends AuthEvent {
   SocietyEntity societyEntity;

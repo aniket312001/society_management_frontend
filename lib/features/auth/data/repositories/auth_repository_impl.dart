@@ -1,9 +1,12 @@
 import 'package:society_management_app/core/storage/token_storage.dart';
 import 'package:society_management_app/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:society_management_app/features/auth/data/models/society_model.dart';
+import 'package:society_management_app/features/auth/data/models/user_login_model.dart';
 import 'package:society_management_app/features/auth/data/models/user_model.dart';
 import 'package:society_management_app/features/auth/domain/entities/register_result.dart';
 import 'package:society_management_app/features/auth/domain/entities/society_entity.dart';
 import 'package:society_management_app/features/auth/domain/entities/user_entity.dart';
+import 'package:society_management_app/features/auth/domain/entities/user_login_entity.dart';
 import 'package:society_management_app/features/auth/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl extends AuthRepository {
@@ -33,6 +36,25 @@ class AuthRepositoryImpl extends AuthRepository {
   }
 
   @override
+  Future<SocietyEntity?> getCurrentUserSociety() async {
+    // TODO: implement getCurrentUserSociety
+    final societyModel = await remoteDataSource.getMySociety();
+    return societyModel?.toEntity();
+  }
+
+  @override
+  Future<UserLoginEntity> checkUserLogin({
+    required String identifier,
+    required bool isEmail,
+  }) async {
+    UserLoginModel loginModel = await remoteDataSource.checkUserLogin(
+      identifier: identifier,
+      isEmail: isEmail,
+    );
+    return loginModel.toEntity();
+  }
+
+  @override
   Future<RegisterResult> createNewSocietyWithAdmin({
     required SocietyEntity society,
     required UserEntity user,
@@ -46,12 +68,6 @@ class AuthRepositoryImpl extends AuthRepository {
     required String password,
   }) {
     // TODO: implement emailLogin
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<SocietyEntity?> getCurrentUserSociety() {
-    // TODO: implement getCurrentUserSociety
     throw UnimplementedError();
   }
 
@@ -83,9 +99,9 @@ class AuthRepositoryImpl extends AuthRepository {
   }
 
   @override
-  Future<void> sendPhoneOtp(String phoneNumber) {
+  Future<void> sendPhoneOtp(String phoneNumber) async {
     // TODO: implement sendPhoneOtp
-    throw UnimplementedError();
+    return await remoteDataSource.sendPhoneOtp(phoneNumber);
   }
 
   @override

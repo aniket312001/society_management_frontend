@@ -2,6 +2,9 @@ class ApiConstants {
   static const String baseUrl =
       "https://elvie-untenable-codi.ngrok-free.dev/api";
 
+  // for check if user exist or not
+  static const String checkAuth = "/check_auth";
+
   static const String loginEmail = "/email_login";
   static const String loginPhone = "/phone_login";
   static const String setPassword = "/set_password";

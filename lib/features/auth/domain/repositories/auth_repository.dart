@@ -1,6 +1,7 @@
 import 'package:society_management_app/features/auth/domain/entities/register_result.dart';
 import 'package:society_management_app/features/auth/domain/entities/society_entity.dart';
 import 'package:society_management_app/features/auth/domain/entities/user_entity.dart';
+import 'package:society_management_app/features/auth/domain/entities/user_login_entity.dart';
 
 abstract class AuthRepository {
   /// Login with email and password
@@ -13,6 +14,11 @@ abstract class AuthRepository {
   Future<UserEntity> phoneLogin({
     required String phoneNumber,
     required String otp,
+  });
+
+  Future<UserLoginEntity> checkUserLogin({
+    required String identifier,
+    required bool isEmail,
   });
 
   /// Initiate phone login by sending OTP
