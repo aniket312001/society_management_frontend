@@ -9,7 +9,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 
 import '../../domain/entities/society_entity.dart';
-import '../../domain/entities/user_entity.dart';
+import '../../../user/domain/entities/user_entity.dart';
 
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';

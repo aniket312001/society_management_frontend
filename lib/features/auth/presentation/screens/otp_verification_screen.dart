@@ -108,8 +108,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       setState(() => _passwordError = 'Password is required');
       return;
     }
-    if (password.length < 8) {
-      setState(() => _passwordError = 'Minimum 8 characters');
+    if (password.length < 6) {
+      setState(() => _passwordError = 'Minimum 6 characters');
       return;
     }
 
@@ -131,6 +131,29 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           // Email OTP
+
+          if (state is Authenticated ||
+              (state is SocietyStatusState &&
+                  state.society?.status == "approved")) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+          } else if (state is SocietyStatusState &&
+              state.society != null &&
+              state.user != null) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SocietyStatusScreen(
+                  user: state.user!,
+                  society: state.society,
+                  errorMessage: state.error,
+                ),
+              ),
+            );
+          }
+
           if (state is EmailOtpSending) {
             setState(() => _isSendingEmail = true);
           }

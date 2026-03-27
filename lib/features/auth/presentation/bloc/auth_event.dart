@@ -1,5 +1,5 @@
 import 'package:society_management_app/features/auth/domain/entities/society_entity.dart';
-import 'package:society_management_app/features/auth/domain/entities/user_entity.dart';
+import 'package:society_management_app/features/user/domain/entities/user_entity.dart';
 import 'package:equatable/equatable.dart';
 import 'package:society_management_app/features/auth/domain/entities/user_login_entity.dart';
 
@@ -59,7 +59,14 @@ class EmailLoginEvent extends AuthEvent {
   List<Object?> get props => [email, password];
 }
 
-class PhoneLogin extends AuthEvent {}
+class PhoneLoginEvent extends AuthEvent {
+  String phone;
+  String otp;
+  PhoneLoginEvent({required this.phone, required this.otp});
+
+  @override
+  List<Object?> get props => [phone, otp];
+}
 
 class GoogleLogin extends AuthEvent {}
 

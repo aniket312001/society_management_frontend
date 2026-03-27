@@ -1,8 +1,13 @@
-// features/auth/presentation/screens/society_status_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:society_management_app/core/di/injector.dart';
+import 'package:society_management_app/core/storage/token_storage.dart';
 import 'package:society_management_app/features/auth/domain/entities/society_entity.dart';
-import 'package:society_management_app/features/auth/domain/entities/user_entity.dart';
+import 'package:society_management_app/features/user/domain/entities/user_entity.dart';
+import 'package:society_management_app/features/auth/presentation/screens/initial_screen.dart';
 import 'package:society_management_app/features/society/screens/home_screen.dart';
+import 'package:society_management_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:society_management_app/features/auth/presentation/bloc/auth_event.dart';
 
 class SocietyStatusScreen extends StatelessWidget {
   final UserEntity user;
@@ -15,6 +20,15 @@ class SocietyStatusScreen extends StatelessWidget {
     this.society,
     this.errorMessage,
   });
+
+  void _logout(BuildContext context) async {
+    // context.read<AuthBloc>().add(LogoutEvent());
+    await sl<TokenStorage>().clearToken();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => InitialScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,26 +52,36 @@ class SocietyStatusScreen extends StatelessWidget {
           'You are not associated with any society yet.\nPlease create or join one.';
       icon = Icons.apartment_outlined;
       iconColor = Colors.grey;
-      actionButton = ElevatedButton.icon(
-        onPressed: () {
-          // Go back to registration or initial screen
-          Navigator.pushReplacementNamed(context, '/register');
-        },
-        icon: const Icon(Icons.add_business),
-        label: const Text('Create Society'),
+      actionButton = Column(
+        children: [
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/register');
+            },
+            icon: const Icon(Icons.add_business),
+            label: const Text('Create Society'),
+          ),
+          const SizedBox(height: 12),
+
+          /// ✅ Logout added here
+          OutlinedButton.icon(
+            onPressed: () => _logout(context),
+            icon: const Icon(Icons.logout),
+            label: const Text('Logout'),
+          ),
+        ],
       );
     } else {
       final status = society!.status.toLowerCase();
 
       if (status == 'active' || status == 'approved') {
-        // If active → go directly to home (no need to show status screen)
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => const HomeScreen()),
           );
         });
-        return const SizedBox.shrink(); // temporary empty
+        return const SizedBox.shrink();
       } else if (status == 'pending') {
         title = 'Registration Pending';
         message =
@@ -65,6 +89,12 @@ class SocietyStatusScreen extends StatelessWidget {
             'We will notify you once it is approved.';
         icon = Icons.hourglass_empty_rounded;
         iconColor = Colors.orange;
+
+        actionButton = OutlinedButton.icon(
+          onPressed: () => _logout(context),
+          icon: const Icon(Icons.logout),
+          label: const Text('Logout'),
+        );
       } else if (status == 'rejected') {
         title = 'Registration Rejected';
         message =
@@ -72,6 +102,7 @@ class SocietyStatusScreen extends StatelessWidget {
             '${society!.description.isNotEmpty ? "Reason: ${society!.description}" : "No reason provided."}';
         icon = Icons.cancel_rounded;
         iconColor = Colors.red;
+
         actionButton = Column(
           children: [
             ElevatedButton.icon(
@@ -82,12 +113,21 @@ class SocietyStatusScreen extends StatelessWidget {
               label: const Text('Create New Society'),
             ),
             const SizedBox(height: 12),
+
             OutlinedButton.icon(
               onPressed: () {
-                // Logout or contact support
+                // You can open email / WhatsApp / support screen
               },
               icon: const Icon(Icons.support_agent),
               label: const Text('Contact Support'),
+            ),
+            const SizedBox(height: 12),
+
+            /// ✅ Logout added here
+            OutlinedButton.icon(
+              onPressed: () => _logout(context),
+              icon: const Icon(Icons.logout),
+              label: const Text('Logout'),
             ),
           ],
         );
@@ -96,6 +136,12 @@ class SocietyStatusScreen extends StatelessWidget {
         message = 'Society status: ${society!.status}\nPlease contact support.';
         icon = Icons.help_outline_rounded;
         iconColor = Colors.blueGrey;
+
+        actionButton = OutlinedButton.icon(
+          onPressed: () => _logout(context),
+          icon: const Icon(Icons.logout),
+          label: const Text('Logout'),
+        );
       }
     }
 
@@ -127,8 +173,18 @@ class SocietyStatusScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
-              if (actionButton != null) actionButton,
+              // if (actionButton != null) actionButton,
               const Spacer(),
+
+              /// ✅ Always visible logout (best UX)
+              OutlinedButton.icon(
+                onPressed: () => _logout(context),
+                icon: const Icon(Icons.logout),
+                label: const Text('Logout'),
+              ),
+
+              const SizedBox(height: 12),
+
               Text(
                 'User: ${user.name} • ${user.email}',
                 style: textTheme.bodySmall?.copyWith(

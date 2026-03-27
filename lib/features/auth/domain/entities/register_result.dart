@@ -1,6 +1,6 @@
 // features/auth/domain/entities/register_result.dart
 import 'package:society_management_app/features/auth/domain/entities/society_entity.dart';
-import 'package:society_management_app/features/auth/domain/entities/user_entity.dart';
+import 'package:society_management_app/features/user/domain/entities/user_entity.dart';
 
 class RegisterResult {
   final bool success;

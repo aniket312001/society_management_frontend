@@ -1,7 +1,7 @@
 // features/auth/presentation/bloc/auth_state.dart
 import 'package:equatable/equatable.dart';
 import 'package:society_management_app/features/auth/domain/entities/user_login_entity.dart';
-import '../../domain/entities/user_entity.dart';
+import '../../../user/domain/entities/user_entity.dart';
 import '../../domain/entities/society_entity.dart';
 
 abstract class AuthState extends Equatable {

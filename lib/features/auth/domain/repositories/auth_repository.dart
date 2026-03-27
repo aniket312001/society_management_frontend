@@ -1,6 +1,6 @@
 import 'package:society_management_app/features/auth/domain/entities/register_result.dart';
 import 'package:society_management_app/features/auth/domain/entities/society_entity.dart';
-import 'package:society_management_app/features/auth/domain/entities/user_entity.dart';
+import 'package:society_management_app/features/user/domain/entities/user_entity.dart';
 import 'package:society_management_app/features/auth/domain/entities/user_login_entity.dart';
 
 abstract class AuthRepository {
@@ -24,6 +24,8 @@ abstract class AuthRepository {
   /// Initiate phone login by sending OTP
   /// (usually called before phoneLogin)
   Future<void> sendPhoneOtp(String phoneNumber);
+
+  Future<UserEntity?> setNewPassword(int id, String newPassword);
 
   Future<void> sendEmailOtp(String email);
 

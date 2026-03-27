@@ -14,6 +14,8 @@ class AppTextField extends StatelessWidget {
   final void Function(String)? onChanged;
   final String? hintText;
 
+  final Iterable<String>? autofillHints;
+
   const AppTextField({
     super.key,
     required this.controller,
@@ -28,6 +30,7 @@ class AppTextField extends StatelessWidget {
     this.enabled = true,
     this.onChanged,
     this.hintText,
+    this.autofillHints,
   });
 
   @override
@@ -47,6 +50,7 @@ class AppTextField extends StatelessWidget {
         color: colorScheme.onSurface,
         fontWeight: FontWeight.w500,
       ),
+      autofillHints: autofillHints,
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,

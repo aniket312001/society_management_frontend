@@ -1,3 +1,5 @@
+import 'package:society_management_app/features/user/domain/entities/user_entity.dart';
+
 class ApiConstants {
   static const String baseUrl =
       "https://elvie-untenable-codi.ngrok-free.dev/api";
@@ -12,8 +14,11 @@ class ApiConstants {
   static const String sendPhoneOtp = "/send_phone_otp";
   static const String verifyEmailOtp = "/verify_email_otp";
   static const String sendEmailOtp = "/send_email_otp";
+  static const String resetPassword = "/user-reset-password";
 
   static const String getMyProfile = "/me";
   static const String getSociety = "/my-society";
   static const String createSociety = "/society";
+
+  static UserEntity? currentUser;
 }

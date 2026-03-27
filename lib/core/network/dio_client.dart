@@ -19,7 +19,6 @@ class DioClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          print("hitting api");
           final token = await sl<TokenStorage>().getValidToken();
 
           if (token != null) {
@@ -29,35 +28,14 @@ class DioClient {
           return handler.next(options);
         },
 
-        onError: (DioException err, ErrorInterceptorHandler handler) async {
-          print("Error in api - ${err}");
-          // ── Critical part: handle 401 globally ────────────────────────
+        onError: (err, handler) async {
+          // Only token handling here
           if (err.response?.statusCode == 401 ||
               err.response?.statusCode == 403) {
-            // Token invalid / expired according to backend
             await sl<TokenStorage>().clearToken();
-
-            // Option A: Just let the request fail (simplest)
-            // The calling use-case / bloc can catch and trigger logout
-
-            // Option B: Emit global logout event (recommended if using Bloc/Riverpod)
-            // sl<AuthBloc>().add(LogoutRequested());
-
-            // Option C: Show toast / dialog here (not recommended – better in UI layer)
-
-            // For now → reject with custom error so caller knows
-            return handler.reject(
-              DioException(
-                requestOptions: err.requestOptions,
-                response: err.response,
-                error: 'Session expired. Please login again.',
-                type: DioExceptionType.badResponse,
-              ),
-            );
           }
 
-          // Other errors → pass through
-          return handler.next(err);
+          return handler.next(err); // IMPORTANT: don't transform here
         },
       ),
     );
