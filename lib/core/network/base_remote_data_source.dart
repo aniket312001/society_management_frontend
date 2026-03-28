@@ -44,6 +44,22 @@ abstract class BaseRemoteDataSource {
     }
   }
 
+  Future<ApiResponse<T>> put<T>(
+    String path,
+    Map<String, dynamic> data, {
+    T Function(dynamic)? parser,
+  }) async {
+    try {
+      final response = await dioClient.dio.put(path, data: data);
+      return ApiResponse<T>.fromJson(
+        response.data as Map<String, dynamic>,
+        fromJsonT: parser,
+      );
+    } on DioException catch (e) {
+      throw DioErrorHandler.handle(e);
+    }
+  }
+
   Future<ApiResponse<T>> patch<T>(
     String path,
     Map<String, dynamic> data, {

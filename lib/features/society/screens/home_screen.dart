@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:society_management_app/core/di/injector.dart';
 import 'package:society_management_app/core/storage/token_storage.dart';
+import 'package:society_management_app/features/announcements/presentation/screens/announcement_screen.dart';
+import 'package:society_management_app/features/announcements/presentation/screens/todays_announcement_widget.dart';
 import 'package:society_management_app/features/auth/presentation/screens/initial_screen.dart';
+import 'package:society_management_app/features/posts/presentation/screens/post_screen.dart';
 import 'package:society_management_app/features/user/presentation/screens/user_screen.dart';
 import 'package:society_management_app/features/visitors/presentation/screens/visitor_screen.dart';
 
@@ -16,9 +19,11 @@ class HomeScreen extends StatelessWidget {
           children: [
             Center(child: Text("home")),
 
+            TodayAnnouncementsWidget(),
+
             ElevatedButton(
               onPressed: () async {
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => UserScreen(role: "admin")),
                 );
@@ -28,7 +33,7 @@ class HomeScreen extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () async {
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) =>
@@ -38,6 +43,31 @@ class HomeScreen extends StatelessWidget {
               },
               child: Text("VisitorScreen"),
             ),
+
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AnnouncementScreen(role: "admin"),
+                  ),
+                );
+              },
+              child: Text("AnnouncementScreen"),
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PostScreen(currentUserId: 5, role: "admin"),
+                  ),
+                );
+              },
+              child: Text("PostScreen"),
+            ),
+
             ElevatedButton(
               onPressed: () async {
                 await sl<TokenStorage>().clearToken();

@@ -1,9 +1,31 @@
 import 'package:get_it/get_it.dart';
+import 'package:society_management_app/features/announcements/data/datasource/announcement_remote_datasource.dart';
+import 'package:society_management_app/features/announcements/data/repositories/announcement_repositoryImp.dart';
+import 'package:society_management_app/features/announcements/domain/repositories/announcement_repository.dart';
+import 'package:society_management_app/features/announcements/domain/usecases/create_announcement_usecase.dart';
+import 'package:society_management_app/features/announcements/domain/usecases/delete_announcement_usecase.dart';
+import 'package:society_management_app/features/announcements/domain/usecases/fetch_active_announcement_usecase.dart';
+import 'package:society_management_app/features/announcements/domain/usecases/fetch_announcement_usecase.dart';
+import 'package:society_management_app/features/announcements/domain/usecases/update_announcement_usecase.dart';
+import 'package:society_management_app/features/announcements/presentation/bloc/announcement_bloc.dart';
 import 'package:society_management_app/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:society_management_app/features/auth/domain/usecases/check_user_exist_usecase.dart';
 import 'package:society_management_app/features/auth/domain/usecases/get_current_user_society_usecase.dart';
 import 'package:society_management_app/features/auth/domain/usecases/phone_login_usecase.dart';
 import 'package:society_management_app/features/auth/domain/usecases/set_password_usecase.dart';
+import 'package:society_management_app/features/posts/data/datasource/post_remote_datasource.dart';
+import 'package:society_management_app/features/posts/data/repositories/post_repositoryImp.dart';
+import 'package:society_management_app/features/posts/domain/repositories/post_repository.dart';
+import 'package:society_management_app/features/posts/domain/usecases/add_comment_usecase.dart';
+import 'package:society_management_app/features/posts/domain/usecases/create_post_usecase.dart';
+import 'package:society_management_app/features/posts/domain/usecases/delete_comment_usecase.dart';
+import 'package:society_management_app/features/posts/domain/usecases/delete_post_usecase.dart';
+import 'package:society_management_app/features/posts/domain/usecases/fetch_post_comments.dart';
+import 'package:society_management_app/features/posts/domain/usecases/fetch_posts_usecase.dart';
+import 'package:society_management_app/features/posts/domain/usecases/like_post_usecase.dart';
+import 'package:society_management_app/features/posts/domain/usecases/unlike_post_usecase.dart';
+import 'package:society_management_app/features/posts/presentation/bloc/comments/comment_bloc.dart';
+import 'package:society_management_app/features/posts/presentation/bloc/posts/post_bloc.dart';
 import 'package:society_management_app/features/user/data/datasources/user_remote_data_source.dart';
 import 'package:society_management_app/features/user/data/repositories/user_repository_impl.dart';
 import 'package:society_management_app/features/user/domain/repositories/user_repository.dart';
@@ -50,7 +72,6 @@ Future<void> init() async {
     () => UserRemoteDataSource(sl()),
   );
 
-  /// REPOSITORY
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(remoteDataSource: sl(), tokenStorage: sl()),
   );
@@ -61,6 +82,16 @@ Future<void> init() async {
   sl.registerLazySingleton<VisitorRepository>(
     () => VisitorRepositoryImpl(sl()),
   );
+
+  // announcements
+  sl.registerLazySingleton(() => AnnouncementRemoteDataSource(sl()));
+  sl.registerLazySingleton<AnnouncementRepository>(
+    () => AnnouncementRepositoryImpl(sl()),
+  );
+
+  // post
+  sl.registerLazySingleton(() => PostRemoteDataSource(sl()));
+  sl.registerLazySingleton<PostRepository>(() => PostRepositoryImpl(sl()));
 
   /// USECASES
   sl.registerLazySingleton(() => CheckCurrentUserUseCase(sl()));
@@ -81,6 +112,22 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateVisitorUsecase(sl()));
   sl.registerLazySingleton(() => UpdateVisitorStatusUsecase(sl()));
   sl.registerLazySingleton(() => DeleteVisitorUsecase(sl()));
+
+  sl.registerLazySingleton(() => FetchAnnouncementsUsecase(sl()));
+  sl.registerLazySingleton(() => FetchActiveAnnouncementsUsecase(sl()));
+  sl.registerLazySingleton(() => CreateAnnouncementUsecase(sl()));
+  sl.registerLazySingleton(() => UpdateAnnouncementUsecase(sl()));
+  sl.registerLazySingleton(() => DeleteAnnouncementUsecase(sl()));
+
+  //post
+  sl.registerLazySingleton(() => AddCommentUsecase(sl()));
+  sl.registerLazySingleton(() => CreatePostUsecase(sl()));
+  sl.registerLazySingleton(() => DeleteCommentUsecase(sl()));
+  sl.registerLazySingleton(() => DeletePostUsecase(sl()));
+  sl.registerLazySingleton(() => FetchCommentsUsecase(sl()));
+  sl.registerLazySingleton(() => FetchPostsUsecase(sl()));
+  sl.registerLazySingleton(() => LikePostUsecase(sl()));
+  sl.registerLazySingleton(() => UnlikePostUsecase(sl()));
 
   /// BLOC
   sl.registerFactory(
@@ -105,6 +152,33 @@ Future<void> init() async {
       updateVisitorUsecase: sl(),
       updateVisitorStatusUsecase: sl(),
       deleteVisitorUsecase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => AnnouncementBloc(
+      createAnnouncementUsecase: sl(),
+      deleteAnnouncementUsecase: sl(),
+      fetchActiveAnnouncementsUsecase: sl(),
+      fetchAnnouncementsUsecase: sl(),
+      updateAnnouncementUsecase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => PostBloc(
+      fetchPostsUsecase: sl(),
+      createPostUsecase: sl(),
+      deletePostUsecase: sl(),
+      likePostUsecase: sl(),
+      unlikePostUsecase: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => CommentBloc(
+      fetchCommentsUsecase: sl(),
+      addCommentUsecase: sl(),
+      deleteCommentUsecase: sl(),
     ),
   );
 }
