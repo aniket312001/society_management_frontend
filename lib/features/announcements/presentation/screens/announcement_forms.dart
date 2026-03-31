@@ -19,9 +19,11 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
   late final TextEditingController _bodyController;
+  late final TextEditingController _startDateController;
+  late final TextEditingController _endDateController;
+
   DateTime? _startDate;
   DateTime? _endDate;
-  bool _submitted = false;
 
   bool get _isEdit => widget.announcement != null;
 
@@ -36,13 +38,81 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
     );
     _startDate = widget.announcement?.startDate;
     _endDate = widget.announcement?.endDate;
+    _startDateController = TextEditingController(
+      text: _startDate != null ? _formatDate(_startDate!) : '',
+    );
+    _endDateController = TextEditingController(
+      text: _endDate != null ? _formatDate(_endDate!) : '',
+    );
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _bodyController.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
     super.dispose();
+  }
+
+  String _formatDate(DateTime d) =>
+      "${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}";
+
+  Future<void> _pickStartDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _startDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+    if (picked != null) {
+      setState(() {
+        _startDate = picked;
+        _startDateController.text = _formatDate(picked);
+        // Clear end date if it's now before the new start date
+        if (_endDate != null && _endDate!.isBefore(picked)) {
+          _endDate = null;
+          _endDateController.clear();
+        }
+      });
+    }
+  }
+
+  Future<void> _pickEndDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _endDate ?? _startDate ?? DateTime.now(),
+      firstDate: _startDate ?? DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+    if (picked != null) {
+      setState(() {
+        _endDate = picked;
+        _endDateController.text = _formatDate(picked);
+      });
+    }
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final entity = AnnouncementEntity(
+      id: widget.announcement?.id ?? 0,
+      societyId: widget.announcement?.societyId ?? 0,
+      createdBy: widget.announcement?.createdBy ?? 0,
+      createdByName: widget.announcement?.createdByName,
+      title: _titleController.text.trim(),
+      body: _bodyController.text.trim(),
+      startDate: _startDate!,
+      endDate: _endDate!,
+      createdAt: widget.announcement?.createdAt ?? DateTime.now(),
+    );
+
+    if (_isEdit) {
+      context.read<AnnouncementBloc>().add(UpdateAnnouncement(entity));
+    } else {
+      context.read<AnnouncementBloc>().add(CreateAnnouncement(entity));
+    }
   }
 
   @override
@@ -86,6 +156,7 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
                   AppTextField(
                     controller: _titleController,
                     label: "Title",
+                    prefixIcon: const Icon(Icons.title_outlined),
                     validator: (v) => v == null || v.trim().isEmpty
                         ? "Title is required"
                         : null,
@@ -95,6 +166,7 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
                   AppTextField(
                     controller: _bodyController,
                     label: "Body",
+                    prefixIcon: const Icon(Icons.notes_outlined),
                     maxLines: 4,
                     validator: (v) => v == null || v.trim().isEmpty
                         ? "Body is required"
@@ -102,25 +174,31 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Start Date ─────────────────────────────────────────────
-                  _DatePickerField(
+                  // ── Start Date ─────────────────────────────────────
+                  AppTextField(
+                    controller: _startDateController,
                     label: "Start Date",
-                    value: _startDate,
-                    showError: _submitted && _startDate == null,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 730)),
-                    onPicked: (d) => setState(() => _startDate = d),
+                    readOnly: true,
+                    onTap: _pickStartDate,
+                    prefixIcon: const Icon(Icons.calendar_today_outlined),
+                    suffixIcon: const Icon(Icons.arrow_drop_down),
+                    hintText: "Select start date",
+                    validator: (_) =>
+                        _startDate == null ? "Start date is required" : null,
                   ),
                   const SizedBox(height: 16),
 
-                  // ── End Date ───────────────────────────────────────────────
-                  _DatePickerField(
+                  // ── End Date ───────────────────────────────────────
+                  AppTextField(
+                    controller: _endDateController,
                     label: "End Date",
-                    value: _endDate,
-                    showError: _submitted && _endDate == null,
-                    firstDate: _startDate ?? DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 730)),
-                    onPicked: (d) => setState(() => _endDate = d),
+                    readOnly: true,
+                    onTap: _pickEndDate,
+                    prefixIcon: const Icon(Icons.calendar_month_outlined),
+                    suffixIcon: const Icon(Icons.arrow_drop_down),
+                    hintText: "Select end date",
+                    validator: (_) =>
+                        _endDate == null ? "End date is required" : null,
                   ),
                   const SizedBox(height: 32),
 
@@ -132,95 +210,6 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _submit() {
-    setState(() => _submitted = true);
-    if (!_formKey.currentState!.validate() ||
-        _startDate == null ||
-        _endDate == null) {
-      return;
-    }
-
-    if (_endDate!.isBefore(_startDate!)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("End date must be on or after start date"),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final entity = AnnouncementEntity(
-      id: widget.announcement?.id ?? 0,
-      societyId: widget.announcement?.societyId ?? 0,
-      createdBy: widget.announcement?.createdBy ?? 0,
-      createdByName: widget.announcement?.createdByName,
-      title: _titleController.text.trim(),
-      body: _bodyController.text.trim(),
-      startDate: _startDate!,
-      endDate: _endDate!,
-      createdAt: widget.announcement?.createdAt ?? DateTime.now(),
-    );
-
-    if (_isEdit) {
-      context.read<AnnouncementBloc>().add(UpdateAnnouncement(entity));
-    } else {
-      context.read<AnnouncementBloc>().add(CreateAnnouncement(entity));
-    }
-  }
-}
-
-// ── Reusable date picker field ─────────────────────────────────────────────────
-class _DatePickerField extends StatelessWidget {
-  final String label;
-  final DateTime? value;
-  final bool showError;
-  final DateTime firstDate;
-  final DateTime lastDate;
-  final void Function(DateTime) onPicked;
-
-  const _DatePickerField({
-    required this.label,
-    required this.value,
-    required this.showError,
-    required this.firstDate,
-    required this.lastDate,
-    required this.onPicked,
-  });
-
-  String _fmt(DateTime d) =>
-      "${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}";
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () async {
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: value ?? firstDate,
-          firstDate: firstDate,
-          lastDate: lastDate,
-        );
-        if (picked != null) onPicked(picked);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          suffixIcon: const Icon(Icons.calendar_today),
-          errorText: showError ? "Date is required" : null,
-        ),
-        child: Text(
-          value != null ? _fmt(value!) : "Select a date",
-          style: TextStyle(
-            color: value != null ? null : Theme.of(context).hintColor,
           ),
         ),
       ),

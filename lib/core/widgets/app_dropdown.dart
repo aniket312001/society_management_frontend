@@ -1,66 +1,50 @@
 import 'package:flutter/material.dart';
 
-class AppTextField extends StatelessWidget {
-  final TextEditingController controller;
+class AppDropdownField<T> extends StatelessWidget {
+  final T value;
   final String label;
-  final String? Function(String?)? validator;
-  final bool obscureText;
-  final TextInputType keyboardType;
-  final int maxLines;
-  final String? errorText;
-  final Widget? suffixIcon;
-  final Widget? prefixIcon;
+  final List<AppDropdownItem<T>> items;
+  final void Function(T?) onChanged;
+  final String? Function(T?)? validator;
   final bool enabled;
-  final bool readOnly;
-  final void Function(String)? onChanged;
-  final void Function()? onTap;
+  final Widget? prefixIcon;
   final String? hintText;
-  final Iterable<String>? autofillHints;
 
-  const AppTextField({
+  const AppDropdownField({
     super.key,
-    required this.controller,
+    required this.value,
     required this.label,
+    required this.items,
+    required this.onChanged,
     this.validator,
-    this.obscureText = false,
-    this.keyboardType = TextInputType.text,
-    this.maxLines = 1,
-    this.errorText,
-    this.suffixIcon,
-    this.prefixIcon,
     this.enabled = true,
-    this.readOnly = false,
-    this.onChanged,
-    this.onTap,
+    this.prefixIcon,
     this.hintText,
-    this.autofillHints,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      enabled: enabled,
-      readOnly: readOnly,
-      onChanged: onChanged,
-      onTap: onTap,
+    return DropdownButtonFormField<T>(
+      value: value,
       validator: validator,
+      onChanged: enabled ? onChanged : null,
       style: TextStyle(
         fontSize: 15,
         color: colorScheme.onSurface,
         fontWeight: FontWeight.w500,
       ),
-      autofillHints: autofillHints,
+      icon: Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: enabled
+            ? colorScheme.onSurfaceVariant
+            : colorScheme.onSurfaceVariant.withOpacity(0.4),
+      ),
+      dropdownColor: colorScheme.surface,
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,
-        errorText: errorText,
-        suffixIcon: suffixIcon,
         prefixIcon: prefixIcon,
         labelStyle: TextStyle(
           fontSize: 14,
@@ -101,6 +85,42 @@ class AppTextField extends StatelessWidget {
           borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.2)),
         ),
       ),
+      items: items
+          .map(
+            (item) => DropdownMenuItem<T>(
+              value: item.value,
+              child: Row(
+                children: [
+                  if (item.icon != null) ...[
+                    Icon(
+                      item.icon,
+                      size: 18,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  Text(
+                    item.label,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+          .toList(),
     );
   }
+}
+
+/// Simple data class for dropdown items
+class AppDropdownItem<T> {
+  final T value;
+  final String label;
+  final IconData? icon;
+
+  const AppDropdownItem({required this.value, required this.label, this.icon});
 }

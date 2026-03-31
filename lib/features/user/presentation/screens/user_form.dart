@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:society_management_app/core/widgets/app_dropdown.dart';
 import 'package:society_management_app/features/user/domain/entities/user_entity.dart';
 import 'package:society_management_app/features/user/presentation/bloc/user_bloc.dart';
 import 'package:society_management_app/features/user/presentation/bloc/user_event.dart';
@@ -134,19 +135,23 @@ class _UserFormScreenState extends State<UserFormScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  DropdownButtonFormField<String>(
+                  AppDropdownField<String>(
                     value: role,
-                    decoration: InputDecoration(
-                      labelText: "Role",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+                    label: "Role",
+                    // prefixIcon: const Icon(Icons.shield_outlined),
+                    onChanged: (v) => setState(() => role = v!),
                     items: const [
-                      DropdownMenuItem(value: "member", child: Text("Member")),
-                      DropdownMenuItem(value: "admin", child: Text("Admin")),
+                      AppDropdownItem(
+                        value: "member",
+                        label: "Member",
+                        icon: Icons.person_outline,
+                      ),
+                      AppDropdownItem(
+                        value: "admin",
+                        label: "Admin",
+                        icon: Icons.admin_panel_settings_outlined,
+                      ),
                     ],
-                    onChanged: (value) => setState(() => role = value!),
                   ),
                   const SizedBox(height: 32),
 

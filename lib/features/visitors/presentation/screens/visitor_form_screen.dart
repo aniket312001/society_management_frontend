@@ -20,6 +20,7 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _purposeController;
+  late final TextEditingController _dateController;
   DateTime? _visitDate;
 
   bool get _isEdit => widget.visitor != null;
@@ -33,6 +34,9 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
       text: widget.visitor?.purpose ?? '',
     );
     _visitDate = widget.visitor?.visitDate;
+    _dateController = TextEditingController(
+      text: _visitDate != null ? _formatDate(_visitDate!) : '',
+    );
   }
 
   @override
@@ -40,109 +44,12 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _purposeController.dispose();
+    _dateController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isLoading = context.select<VisitorBloc, bool>(
-      (b) => b.state is VisitorFormLoading,
-    );
-
-    return BlocListener<VisitorBloc, VisitorState>(
-      listener: (context, state) {
-        if (state is VisitorPageLoaded && state.message != null) {
-          if (state.isError)
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message!),
-                backgroundColor: state.isError ? Colors.red : Colors.green,
-              ),
-            );
-          if (!state.isError) Navigator.pop(context);
-        }
-        if (state is VisitorFormError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-          );
-        }
-      },
-      child: Scaffold(
-        appBar: AppBar(title: Text(_isEdit ? "Edit Visitor" : "Add Visitor")),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppTextField(
-                    controller: _nameController,
-                    label: "Visitor Name",
-                    validator: (v) => v == null || v.trim().isEmpty
-                        ? "Name is required"
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-
-                  AppTextField(
-                    controller: _phoneController,
-                    label: "Phone (optional)",
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 16),
-
-                  AppTextField(
-                    controller: _purposeController,
-                    label: "Purpose (optional)",
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ─── Date Picker ───────────────────────────────────────────
-                  InkWell(
-                    onTap: _pickDate,
-                    borderRadius: BorderRadius.circular(12),
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: "Visit Date",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        suffixIcon: const Icon(Icons.calendar_today),
-                        errorText:
-                            _visitDate == null && _formKey.currentState != null
-                            ? "Date is required"
-                            : null,
-                      ),
-                      child: Text(
-                        _visitDate != null
-                            ? "${_visitDate!.day}/${_visitDate!.month}/${_visitDate!.year}"
-                            : "Select a date",
-                        style: TextStyle(
-                          color: _visitDate != null
-                              ? null
-                              : Theme.of(context).hintColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  AppButton(
-                    text: _isEdit ? "Update Visitor" : "Add Visitor",
-                    isLoading: isLoading,
-                    onPressed: isLoading ? null : _submit,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  String _formatDate(DateTime d) =>
+      "${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}";
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -151,15 +58,16 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (picked != null) setState(() => _visitDate = picked);
+    if (picked != null) {
+      setState(() {
+        _visitDate = picked;
+        _dateController.text = _formatDate(picked);
+      });
+    }
   }
 
   void _submit() {
-    // Manually validate date since it's not a FormField
-    if (!_formKey.currentState!.validate() || _visitDate == null) {
-      if (_visitDate == null) setState(() {}); // trigger error display
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     final entity = VisitorEntity(
       id: widget.visitor?.id ?? 0,
@@ -182,5 +90,95 @@ class _VisitorFormScreenState extends State<VisitorFormScreen> {
     } else {
       context.read<VisitorBloc>().add(CreateVisitor(entity));
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isLoading = context.select<VisitorBloc, bool>(
+      (b) => b.state is VisitorFormLoading,
+    );
+
+    return BlocListener<VisitorBloc, VisitorState>(
+      listener: (context, state) {
+        if (state is VisitorPageLoaded && state.message != null) {
+          if (state.isError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message!),
+                backgroundColor: Colors.red,
+              ),
+            );
+          } else {
+            Navigator.pop(context);
+          }
+        }
+        if (state is VisitorFormError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text(_isEdit ? "Edit Visitor" : "Add Visitor")),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppTextField(
+                    controller: _nameController,
+                    label: "Visitor Name",
+                    prefixIcon: const Icon(Icons.person_outline),
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? "Name is required"
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  AppTextField(
+                    controller: _phoneController,
+                    label: "Phone (optional)",
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 16),
+
+                  AppTextField(
+                    controller: _purposeController,
+                    label: "Purpose (optional)",
+                    prefixIcon: const Icon(Icons.info_outline),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ── Date picker using AppTextField ─────────────────
+                  AppTextField(
+                    controller: _dateController,
+                    label: "Visit Date",
+                    readOnly: true,
+                    onTap: _pickDate,
+                    prefixIcon: const Icon(Icons.calendar_today_outlined),
+                    suffixIcon: const Icon(Icons.arrow_drop_down),
+                    hintText: "Select a date",
+                    validator: (_) =>
+                        _visitDate == null ? "Visit date is required" : null,
+                  ),
+                  const SizedBox(height: 32),
+
+                  AppButton(
+                    text: _isEdit ? "Update Visitor" : "Add Visitor",
+                    isLoading: isLoading,
+                    onPressed: isLoading ? null : _submit,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
