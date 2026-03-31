@@ -1,5 +1,6 @@
 // features/auth/presentation/bloc/auth_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:society_management_app/core/constants/constants_values.dart';
 import 'package:society_management_app/core/error/exceptions.dart';
 import 'package:society_management_app/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:society_management_app/features/auth/domain/entities/user_login_entity.dart';
@@ -92,6 +93,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       if (society == null) return;
 
+      ConstantsValue.currentUser = user;
+
       if (society.status == "approved") {
         emit(Authenticated(user, society: society));
       } else {
@@ -118,6 +121,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       if (result.isSuccess) {
+        ConstantsValue.currentUser = event.userEntity;
         emit(CreateSocietySuccess(result.admin!, result.society!));
         emit(Authenticated(result.admin!, society: result.society));
       } else {

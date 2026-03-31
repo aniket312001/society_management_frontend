@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:society_management_app/core/constants/constants_values.dart';
 import 'package:society_management_app/core/di/injector.dart';
 import 'package:society_management_app/features/announcements/presentation/screens/annoucement_card.dart';
 import 'package:society_management_app/features/announcements/presentation/screens/announcement_forms.dart';
@@ -8,9 +9,7 @@ import '../bloc/announcement_event.dart';
 import '../bloc/announcement_state.dart';
 
 class AnnouncementScreen extends StatefulWidget {
-  final String role;
-
-  const AnnouncementScreen({super.key, required this.role});
+  const AnnouncementScreen({super.key});
 
   @override
   State<AnnouncementScreen> createState() => _AnnouncementScreenState();
@@ -40,7 +39,7 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = widget.role == "admin";
+    final isAdmin = ConstantsValue.currentUser?.role == "admin";
 
     return BlocProvider(
       create: (_) => sl<AnnouncementBloc>()..add(const FetchAnnouncements()),

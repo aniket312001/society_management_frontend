@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:society_management_app/core/constants/constants_values.dart';
 import 'package:society_management_app/core/di/injector.dart';
 import 'package:society_management_app/features/visitors/presentation/screens/visitor_card.dart';
 import '../bloc/visitor_bloc.dart';
@@ -8,14 +9,7 @@ import '../bloc/visitor_state.dart';
 import 'visitor_form_screen.dart';
 
 class VisitorScreen extends StatefulWidget {
-  final String role;
-  final int currentUserId;
-
-  const VisitorScreen({
-    super.key,
-    required this.role,
-    required this.currentUserId,
-  });
+  const VisitorScreen({super.key});
 
   @override
   State<VisitorScreen> createState() => _VisitorScreenState();
@@ -45,7 +39,7 @@ class _VisitorScreenState extends State<VisitorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = widget.role == "admin";
+    final isAdmin = ConstantsValue.currentUser?.role == "admin";
 
     return BlocProvider(
       create: (_) => sl<VisitorBloc>()..add(FetchVisitors()),
@@ -127,7 +121,8 @@ class _VisitorScreenState extends State<VisitorScreen> {
                         }
 
                         final visitor = state.visitors[index];
-                        final isOwner = visitor.addedBy == widget.currentUserId;
+                        final isOwner =
+                            visitor.addedBy == ConstantsValue.currentUser?.id;
 
                         return VisitorCard(
                           visitor: visitor,

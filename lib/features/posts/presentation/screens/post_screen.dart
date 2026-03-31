@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:society_management_app/core/constants/constants_values.dart';
 import 'package:society_management_app/core/di/injector.dart';
 import 'package:society_management_app/features/posts/presentation/bloc/posts/post_bloc.dart';
 import 'package:society_management_app/features/posts/presentation/bloc/posts/post_event.dart';
@@ -10,14 +11,7 @@ import 'package:society_management_app/features/posts/presentation/screens/creat
 import 'post_card.dart';
 
 class PostScreen extends StatefulWidget {
-  final String role;
-  final int currentUserId;
-
-  const PostScreen({
-    super.key,
-    required this.role,
-    required this.currentUserId,
-  });
+  const PostScreen({super.key});
 
   @override
   State<PostScreen> createState() => _PostScreenState();
@@ -47,7 +41,7 @@ class _PostScreenState extends State<PostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = widget.role == "admin";
+    final isAdmin = ConstantsValue.currentUser?.role == "admin";
 
     return BlocProvider(
       create: (_) => sl<PostBloc>()..add(const FetchPosts()),
@@ -176,7 +170,7 @@ class _PostScreenState extends State<PostScreen> {
                         final post = state.posts[index];
                         return PostCard(
                           post: post,
-                          currentUserId: widget.currentUserId,
+                          currentUserId: ConstantsValue.currentUser?.id ?? -1,
                           isAdmin: isAdmin,
                           onLike: () => context.read<PostBloc>().add(
                             ToggleLike(
@@ -187,7 +181,7 @@ class _PostScreenState extends State<PostScreen> {
                           onComment: () => CommentsSheet.show(
                             context,
                             postId: post.id,
-                            currentUserId: widget.currentUserId,
+                            currentUserId: ConstantsValue.currentUser?.id ?? -1,
                             isAdmin: isAdmin,
                             postBloc: context.read<PostBloc>(),
                           ),

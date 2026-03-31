@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:society_management_app/core/constants/api_constants.dart';
+import 'package:society_management_app/core/constants/constants_values.dart';
 import 'package:society_management_app/core/di/injector.dart';
 import 'package:society_management_app/core/storage/token_storage.dart';
 import 'package:society_management_app/features/announcements/presentation/screens/announcement_screen.dart';
@@ -14,8 +16,6 @@ import 'package:society_management_app/features/visitors/presentation/screens/vi
 
 // ─── Temporary placeholders for role/userId ──────────────────────────────────
 // Replace these with values from your auth state / shared prefs
-const String _kRole = "admin";
-const int _kUserId = 5;
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -70,7 +70,7 @@ class _HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = _kRole == "admin";
+    final isAdmin = ConstantsValue.currentUser?.role == "admin";
     final tabs = _visibleTabs(isAdmin);
 
     return BlocBuilder<NavBloc, NavState>(
@@ -104,13 +104,13 @@ class _HomeView extends StatelessWidget {
       case 0:
         return const _DashboardTab();
       case 1:
-        return PostScreen(currentUserId: _kUserId, role: _kRole);
+        return PostScreen();
       case 2:
-        return VisitorScreen(currentUserId: _kUserId, role: _kRole);
+        return VisitorScreen();
       case 3:
-        return AnnouncementScreen(role: _kRole);
+        return AnnouncementScreen();
       case 4:
-        return UserScreen(role: _kRole);
+        return UserScreen();
       default:
         return const SizedBox.shrink();
     }
@@ -183,14 +183,16 @@ class _DashboardTab extends StatelessWidget {
                       onTap: () =>
                           context.read<NavBloc>().add(const NavTabChanged(2)),
                     ),
-                    _QuickCard(
-                      icon: Icons.campaign_outlined,
-                      label: "Notices",
-                      color: Colors.green,
-                      onTap: () =>
-                          context.read<NavBloc>().add(const NavTabChanged(3)),
-                    ),
-                    if (_kRole == "admin")
+
+                    if (ConstantsValue.currentUser?.role == "admin")
+                      _QuickCard(
+                        icon: Icons.campaign_outlined,
+                        label: "Notices",
+                        color: Colors.green,
+                        onTap: () =>
+                            context.read<NavBloc>().add(const NavTabChanged(3)),
+                      ),
+                    if (ConstantsValue.currentUser?.role == "admin")
                       _QuickCard(
                         icon: Icons.group_outlined,
                         label: "Members",

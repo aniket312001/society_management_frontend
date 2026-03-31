@@ -19,6 +19,4 @@ class ApiConstants {
   static const String getMyProfile = "/me";
   static const String getSociety = "/my-society";
   static const String createSociety = "/society";
-
-  static UserEntity? currentUser;
 }

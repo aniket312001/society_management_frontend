@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:society_management_app/core/constants/constants_values.dart';
 import 'package:society_management_app/core/di/injector.dart';
 import 'package:society_management_app/features/user/domain/entities/user_entity.dart';
 import '../bloc/user_bloc.dart';
@@ -8,8 +9,7 @@ import '../bloc/user_state.dart';
 import 'user_form.dart';
 
 class UserScreen extends StatefulWidget {
-  final String role;
-  const UserScreen({super.key, required this.role});
+  const UserScreen({super.key});
 
   @override
   State<UserScreen> createState() => _UserScreenState();
@@ -39,7 +39,7 @@ class _UserScreenState extends State<UserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = widget.role == "admin";
+    final isAdmin = ConstantsValue.currentUser?.role == "admin";
 
     return BlocProvider(
       create: (_) => sl<UserBloc>()..add(FetchUsers()),
