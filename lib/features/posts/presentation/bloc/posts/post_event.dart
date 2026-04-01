@@ -16,9 +16,13 @@ class LoadMorePosts extends PostEvent {
 
 class CreatePost extends PostEvent {
   final String content;
-  const CreatePost(this.content);
+  final String? fileUrl;
+  final String? fileType;
+
+  const CreatePost(this.content, {this.fileUrl, this.fileType});
+
   @override
-  List<Object?> get props => [content];
+  List<Object?> get props => [content, fileUrl, fileType];
 }
 
 class DeletePost extends PostEvent {

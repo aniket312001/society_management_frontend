@@ -7,6 +7,8 @@ class PostModel extends PostEntity {
     required super.userId,
     super.authorName,
     required super.content,
+    super.fileUrl,
+    super.fileType,
     required super.likeCount,
     required super.commentCount,
     required super.likedByMe,
@@ -20,6 +22,8 @@ class PostModel extends PostEntity {
       userId: json['user_id'] as int? ?? 0,
       authorName: json['author_name'] as String?,
       content: json['content'] as String? ?? '',
+      fileUrl: json['file_url'] as String?, // NEW
+      fileType: json['file_type'] as String?, // NEW
       likeCount: int.tryParse(json['like_count']?.toString() ?? '0') ?? 0,
       commentCount: int.tryParse(json['comment_count']?.toString() ?? '0') ?? 0,
       likedByMe: json['liked_by_me'] as bool? ?? false,
@@ -29,5 +33,10 @@ class PostModel extends PostEntity {
     );
   }
 
-  Map<String, dynamic> toJson() => {'content': content};
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{'content': content};
+    if (fileUrl != null) map['file_url'] = fileUrl;
+    if (fileType != null) map['file_type'] = fileType;
+    return map;
+  }
 }

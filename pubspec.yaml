@@ -53,6 +53,11 @@ dev_dependencies:
   jwt_decoder: ^2.0.1
   intl_phone_number_input: ^0.7.5
   pinput: ^6.0.2
+  supabase_flutter: ^2.12.2
+  image_picker: ^1.2.1
+  cached_network_image: ^3.4.1
+  video_player: ^2.11.1
+  chewie: ^1.13.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

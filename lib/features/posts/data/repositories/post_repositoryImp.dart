@@ -12,8 +12,11 @@ class PostRepositoryImpl implements PostRepository {
       remote.getPosts(page: page, limit: limit);
 
   @override
-  Future<PostEntity> createPost(String content) => remote.createPost(content);
-
+  Future<PostEntity> createPost(
+    String content, {
+    String? fileUrl,
+    String? fileType,
+  }) => remote.createPost(content, fileUrl: fileUrl, fileType: fileType);
   @override
   Future<void> deletePost(int postId) => remote.deletePost(postId);
 

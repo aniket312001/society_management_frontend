@@ -10,6 +10,8 @@ class PostEntity extends Equatable {
   final int commentCount;
   final bool likedByMe;
   final DateTime createdAt;
+  final String? fileUrl;
+  final String? fileType;
 
   const PostEntity({
     required this.id,
@@ -21,19 +23,29 @@ class PostEntity extends Equatable {
     required this.commentCount,
     required this.likedByMe,
     required this.createdAt,
+    this.fileUrl,
+    this.fileType,
   });
+
+  bool get hasMedia => fileUrl != null && fileUrl!.isNotEmpty;
+  bool get isImage => fileType == 'image';
+  bool get isVideo => fileType == 'video';
 
   PostEntity copyWith({
     int? likeCount,
     int? commentCount,
     bool? likedByMe,
     String? content,
+    String? fileUrl,
+    String? fileType,
   }) => PostEntity(
     id: id,
     societyId: societyId,
     userId: userId,
     authorName: authorName,
     content: content ?? this.content,
+    fileUrl: fileUrl ?? this.fileUrl,
+    fileType: fileType ?? this.fileType,
     likeCount: likeCount ?? this.likeCount,
     commentCount: commentCount ?? this.commentCount,
     likedByMe: likedByMe ?? this.likedByMe,
@@ -51,5 +63,7 @@ class PostEntity extends Equatable {
     commentCount,
     likedByMe,
     createdAt,
+    fileUrl,
+    fileType,
   ];
 }

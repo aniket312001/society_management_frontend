@@ -4,7 +4,11 @@ import 'package:society_management_app/features/posts/domain/entities/post_entit
 abstract class PostRepository {
   Future<List<PostEntity>> getPosts({required int page, int limit = 10});
 
-  Future<PostEntity> createPost(String content);
+  Future<PostEntity> createPost(
+    String content, {
+    String? fileUrl,
+    String? fileType,
+  });
 
   Future<void> deletePost(int postId);
 

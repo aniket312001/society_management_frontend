@@ -5,5 +5,9 @@ class CreatePostUsecase {
   final PostRepository repository;
   CreatePostUsecase(this.repository);
 
-  Future<PostEntity> call(String content) => repository.createPost(content);
+  Future<PostEntity> call(
+    String content, {
+    String? fileUrl,
+    String? fileType,
+  }) => repository.createPost(content, fileUrl: fileUrl, fileType: fileType);
 }

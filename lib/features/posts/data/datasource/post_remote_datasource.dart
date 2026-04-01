@@ -17,10 +17,20 @@ class PostRemoteDataSource extends BaseRemoteDataSource {
     return res.data ?? [];
   }
 
-  Future<PostModel> createPost(String content) async {
-    final res = await post<PostModel>("/posts", {
-      "content": content,
-    }, parser: (json) => PostModel.fromJson(json as Map<String, dynamic>));
+  Future<PostModel> createPost(
+    String content, {
+    String? fileUrl,
+    String? fileType,
+  }) async {
+    final body = <String, dynamic>{'content': content};
+    if (fileUrl != null) body['file_url'] = fileUrl;
+    if (fileType != null) body['file_type'] = fileType;
+
+    final res = await post<PostModel>(
+      "/posts",
+      body,
+      parser: (json) => PostModel.fromJson(json as Map<String, dynamic>),
+    );
     assertSuccess(res, "Failed to create post");
     return res.data!;
   }

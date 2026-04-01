@@ -73,7 +73,11 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     final current = _current;
     emit(PostFormLoading());
     try {
-      final created = await createPostUsecase(e.content);
+      final created = await createPostUsecase(
+        e.content,
+        fileUrl: e.fileUrl,
+        fileType: e.fileType,
+      );
       emit(
         PostPageLoaded(
           posts: [created, ...?current?.posts],

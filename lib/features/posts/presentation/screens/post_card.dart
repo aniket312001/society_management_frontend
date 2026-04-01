@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:society_management_app/core/widgets/image_widget.dart';
+import 'package:society_management_app/core/widgets/video_widget.dart';
 import 'package:society_management_app/features/posts/domain/entities/post_entities.dart';
 
 class PostCard extends StatelessWidget {
@@ -130,6 +132,14 @@ class PostCard extends StatelessWidget {
               post.content,
               style: const TextStyle(fontSize: 14, height: 1.5),
             ),
+
+            if (post.hasMedia) ...[
+              const SizedBox(height: 10),
+              if (post.isImage)
+                AppImageWidget(url: post.fileUrl!)
+              else if (post.isVideo)
+                AppVideoPlayer(url: post.fileUrl!),
+            ],
 
             // ── Actions ───────────────────────────────────────────
             const SizedBox(height: 10),
