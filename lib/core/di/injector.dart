@@ -1,4 +1,7 @@
 import 'package:get_it/get_it.dart';
+import 'package:society_management_app/core/constants/api_constants.dart';
+import 'package:society_management_app/core/constants/constants_values.dart';
+import 'package:society_management_app/core/network/websocket_service.dart';
 import 'package:society_management_app/features/announcements/data/datasource/announcement_remote_datasource.dart';
 import 'package:society_management_app/features/announcements/data/repositories/announcement_repositoryImp.dart';
 import 'package:society_management_app/features/announcements/domain/repositories/announcement_repository.dart';
@@ -13,6 +16,13 @@ import 'package:society_management_app/features/auth/domain/usecases/check_user_
 import 'package:society_management_app/features/auth/domain/usecases/get_current_user_society_usecase.dart';
 import 'package:society_management_app/features/auth/domain/usecases/phone_login_usecase.dart';
 import 'package:society_management_app/features/auth/domain/usecases/set_password_usecase.dart';
+import 'package:society_management_app/features/chats/data/datasources/chat_remote_data_source.dart';
+import 'package:society_management_app/features/chats/data/repositories/chat_repository_impl.dart';
+import 'package:society_management_app/features/chats/domain/repositories/chat_repository.dart';
+import 'package:society_management_app/features/chats/domain/usecases/get_messages_usecase.dart';
+import 'package:society_management_app/features/chats/domain/usecases/get_my_rooms_usecase.dart';
+import 'package:society_management_app/features/chats/domain/usecases/start_direct_chat_usecase.dart';
+import 'package:society_management_app/features/chats/presentation/bloc/chat_bloc.dart';
 import 'package:society_management_app/features/posts/data/datasource/post_remote_datasource.dart';
 import 'package:society_management_app/features/posts/data/repositories/post_repositoryImp.dart';
 import 'package:society_management_app/features/posts/domain/repositories/post_repository.dart';
@@ -93,6 +103,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => PostRemoteDataSource(sl()));
   sl.registerLazySingleton<PostRepository>(() => PostRepositoryImpl(sl()));
 
+  // chat
+  sl.registerLazySingleton(() => ChatRemoteDataSource(sl()));
+  sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(sl()));
+
   /// USECASES
   sl.registerLazySingleton(() => CheckCurrentUserUseCase(sl()));
   sl.registerLazySingleton(() => CreateNewSocietyWithAdminUseCase(sl()));
@@ -128,6 +142,11 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FetchPostsUsecase(sl()));
   sl.registerLazySingleton(() => LikePostUsecase(sl()));
   sl.registerLazySingleton(() => UnlikePostUsecase(sl()));
+
+  // chat
+  sl.registerLazySingleton(() => GetMessagesUseCase(sl()));
+  sl.registerLazySingleton(() => GetMyRoomsUseCase(sl()));
+  sl.registerLazySingleton(() => StartDirectChatUseCase(sl()));
 
   /// BLOC
   sl.registerFactory(
@@ -179,6 +198,20 @@ Future<void> init() async {
       fetchCommentsUsecase: sl(),
       addCommentUsecase: sl(),
       deleteCommentUsecase: sl(),
+    ),
+  );
+
+  // WebSocket Service - Register as LazySingleton
+  sl.registerLazySingleton<WebSocketService>(
+    () => WebSocketService(baseUrl: ApiConstants.baseUrl),
+  );
+
+  sl.registerFactory(
+    () => ChatBloc(
+      getMessagesUseCase: sl(),
+      getMyRoomsUseCase: sl(),
+      startDirectChatUseCase: sl(),
+      webSocketService: sl(),
     ),
   );
 }

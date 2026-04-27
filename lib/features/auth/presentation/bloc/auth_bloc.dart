@@ -94,6 +94,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (society == null) return;
 
       ConstantsValue.currentUser = user;
+      ConstantsValue.societyDetails = society;
 
       if (society.status == "approved") {
         emit(Authenticated(user, society: society));
@@ -122,6 +123,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       if (result.isSuccess) {
         ConstantsValue.currentUser = event.userEntity;
+        ConstantsValue.societyDetails = result.society;
         emit(CreateSocietySuccess(result.admin!, result.society!));
         emit(Authenticated(result.admin!, society: result.society));
       } else {

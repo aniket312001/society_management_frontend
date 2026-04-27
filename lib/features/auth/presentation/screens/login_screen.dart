@@ -8,6 +8,10 @@ import 'package:society_management_app/features/auth/presentation/bloc/auth_bloc
 import 'package:society_management_app/features/auth/presentation/bloc/auth_event.dart';
 import 'package:society_management_app/features/auth/presentation/bloc/auth_state.dart';
 import 'package:society_management_app/features/auth/presentation/screens/register_screen.dart';
+import 'package:society_management_app/features/auth/presentation/screens/widgets/login_identifier_field.dart';
+import 'package:society_management_app/features/auth/presentation/screens/widgets/login_mode_toggle.dart';
+import 'package:society_management_app/features/auth/presentation/screens/widgets/login_otp_field.dart';
+import 'package:society_management_app/features/auth/presentation/screens/widgets/login_password_field.dart';
 import 'package:society_management_app/features/society/screens/home_screen.dart';
 import 'package:society_management_app/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:society_management_app/features/society/screens/society_status_screen.dart';
@@ -128,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
   // UI Building
   // ──────────────────────────────────────────────
 
-  Widget _buildOtpField() {
+  Widget buildOtpField() {
     final defaultPinTheme = PinTheme(
       width: 56,
       height: 60,
@@ -268,99 +272,65 @@ class _LoginScreenState extends State<LoginScreen> {
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
-            child: Column(
+            child: // Only showing cleaned UI part
+            Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 40),
                 const Icon(Icons.login_rounded, size: 80, color: Colors.blue),
+
                 const SizedBox(height: 32),
+
                 Text(
                   'Welcome Back',
                   style: Theme.of(context).textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
+
                 const SizedBox(height: 40),
 
-                // Email / Phone toggle
-                SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment(value: false, label: Text('Email')),
-                    ButtonSegment(value: true, label: Text('Phone')),
-                  ],
-                  selected: {_isPhoneMode},
-                  onSelectionChanged: (newSelection) {
+                LoginModeToggle(
+                  isPhoneMode: _isPhoneMode,
+                  onChanged: (value) {
+                    if (_isPhoneMode == value) return;
+
                     setState(() {
-                      _isPhoneMode = newSelection.first;
+                      _isPhoneMode = value;
                       _errorMessage = null;
                       _showCredentialField = false;
                       _phoneOtpController.clear();
                     });
                   },
                 ),
+
                 const SizedBox(height: 32),
 
-                // Identifier input
-                _isPhoneMode
-                    ? InternationalPhoneNumberInput(
-                        onInputChanged: (value) {
-                          _phoneNumber = value;
-                          if (_phoneNumber.dialCode != value.dialCode ||
-                              _phoneNumber.phoneNumber != value.phoneNumber ||
-                              _phoneNumber.isoCode != value.isoCode) {
-                            setState(() {
-                              if (_errorMessage != null) _errorMessage = null;
-                            });
-                          }
-                        },
-                        onInputValidated: (isValid) =>
-                            setState(() => _phoneIsValid = isValid),
-                        initialValue: _phoneNumber,
-                        selectorConfig: const SelectorConfig(
-                          selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
-                          useEmoji: true,
-                        ),
-                        inputDecoration: InputDecoration(
-                          labelText: 'Phone Number',
-                          border: const OutlineInputBorder(),
-                          errorText:
-                              _errorMessage != null &&
-                                  _isPhoneMode &&
-                                  !_showCredentialField
-                              ? _errorMessage
-                              : null,
-                        ),
-                      )
-                    : AppTextField(
-                        controller: _emailController,
-                        label: 'Email Address',
-                        autofillHints: const [AutofillHints.email],
-                        keyboardType: TextInputType.emailAddress,
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        errorText: _errorMessage != null && !_isPhoneMode
-                            ? _errorMessage
-                            : null,
-                      ),
+                LoginIdentifierField(
+                  isPhoneMode: _isPhoneMode,
+                  emailController: _emailController,
+                  phoneNumber: _phoneNumber,
+                  onPhoneChanged: (val) => _phoneNumber = val,
+                  onPhoneValidated: (val) => _phoneIsValid = val,
+                  error: _errorMessage,
+                  showError: !_showCredentialField,
+                ),
 
                 const SizedBox(height: 24),
 
-                // Credential field (password or OTP)
                 if (_showCredentialField) ...[
-                  if (_isPhoneMode)
-                    _buildOtpField()
-                  else
-                    AppTextField(
-                      controller: _passwordController,
-                      label: 'Password',
-                      obscureText: true,
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      errorText: _errorMessage != null && !_isPhoneMode
-                          ? _errorMessage
-                          : null,
-                    ),
+                  _isPhoneMode
+                      ? LoginOtpField(
+                          controller: _phoneOtpController,
+                          errorMessage: _errorMessage,
+                          onCompleted: _verifyPhoneOtp,
+                        )
+                      : LoginPasswordField(
+                          controller: _passwordController,
+                          error: _errorMessage,
+                        ),
                   const SizedBox(height: 24),
                 ],
 
-                // Action button
                 AppButton(
                   text: isLoading
                       ? 'Checking...'

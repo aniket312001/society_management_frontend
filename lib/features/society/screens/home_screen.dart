@@ -7,6 +7,7 @@ import 'package:society_management_app/core/storage/token_storage.dart';
 import 'package:society_management_app/features/announcements/presentation/screens/announcement_screen.dart';
 import 'package:society_management_app/features/announcements/presentation/screens/todays_announcement_widget.dart';
 import 'package:society_management_app/features/auth/presentation/screens/initial_screen.dart';
+import 'package:society_management_app/features/chats/presentation/screens/chat_list_screen.dart';
 import 'package:society_management_app/features/posts/presentation/screens/post_screen.dart';
 import 'package:society_management_app/features/society/bloc/nav_bloc.dart';
 import 'package:society_management_app/features/society/bloc/nav_event.dart';
@@ -200,6 +201,20 @@ class _DashboardTab extends StatelessWidget {
                         onTap: () =>
                             context.read<NavBloc>().add(const NavTabChanged(4)),
                       ),
+
+                    _QuickCard(
+                      icon: Icons.group_outlined,
+                      label: "Chats",
+                      color: Colors.cyan,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ChatListScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),

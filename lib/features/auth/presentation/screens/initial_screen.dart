@@ -1,5 +1,7 @@
 // initial_screen.dart
 import 'package:flutter/material.dart';
+import 'package:society_management_app/core/widgets/icon_button.dart/app_outline_icon_button.dart';
+import 'package:society_management_app/core/widgets/icon_button.dart/app_primary_icon_button.dart';
 import 'package:society_management_app/features/auth/presentation/screens/register_screen.dart';
 import 'login_screen.dart';
 
@@ -35,40 +37,28 @@ class InitialScreen extends StatelessWidget {
               ),
               const SizedBox(height: 64),
 
-              ElevatedButton.icon(
+              AppPrimaryIconButton(
+                text: 'Create New Society',
+                icon: Icons.add_business,
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const RegisterScreen()),
                   );
                 },
-                icon: const Icon(Icons.add_business),
-                label: const Text(
-                  'Create New Society',
-                  style: TextStyle(fontSize: 18),
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(fontSize: 18),
-                ),
               ),
+
               const SizedBox(height: 16),
 
-              OutlinedButton.icon(
+              AppOutlineIconButton(
+                text: 'Already have an account? Login',
+                icon: Icons.login,
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
                   );
                 },
-                icon: const Icon(Icons.login),
-                label: const Text(
-                  'Already have an account? Login',
-                  style: TextStyle(fontSize: 18),
-                ),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
               ),
             ],
           ),
